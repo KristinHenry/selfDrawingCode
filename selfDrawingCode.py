@@ -1,4 +1,4 @@
-#  by Kristin Henry, 2013
+#  by Kristin Henry, 2013  @KristinHenry
 #
 #  other monospaced fonts can be found here http://www.fontsquirrel.com/fonts/list/classification/monospaced
 
