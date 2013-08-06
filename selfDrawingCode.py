@@ -215,7 +215,7 @@ im = Image.new("RGBA", (imgSizeX, imgSizeY), backgroundColorAlpha)
 # Do the drawing
 draw = ImageDraw.Draw(im)
 drawDots(draw)
-drawChars(draw)
+#drawChars(draw)  # if on linux, can uncomment this
 
 bkg.paste(im, (0,0), im)
 
