@@ -15,15 +15,12 @@ class selfDrawingCode :
 
 		self.fontname = "Anonymous_Pro.ttf"   # change this to a font you have
 
-		
-
 		self.rMax = 60
 		self.buff = 50
 		self.dx = 0
 		self.dy = 0
 		self.dxMax = 0
 		self.dyMax = 0
-
 		
 		imgSize = [500, 500] # set default size of image, will be resized
 		border = 10
@@ -44,19 +41,18 @@ class selfDrawingCode :
 			print "Error reading file: ", filename
 
 		# preprocess data
-		letters = []
-		counts = []
-		self.getLetters(data, letters, counts)
+		letterCounts = self.getLetters(data)
 
 		baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
-		letterColors = self.getLetterColors(letters, counts, baseColor)
+		letterColors = self.getLetterColors(letterCounts, baseColor)
 		
 		dots = self.getDots(data, letterColors)
 		self.minmax = self.getDotsMinMax(dots)
 
 		# adjust positions of dots and image size, so that image contains all dots
 		self.shiftDots(dots)
-		self.resizeImage(imgSize)
+		imgSize = self.resizeImage(imgSize)
+		print imgSize
 
 		# create background  and image to draw into
 		backgroundColor = "white"
@@ -76,29 +72,28 @@ class selfDrawingCode :
 
 
 
-	def getLetters(self, data, letters, counts):
+	def getLetters(self, data):
+		letterCounts = {}
 		for line in data:
 			for char in line:
 				if (char != '\n') & (char != '\t'):
-					self.countLetters(char, letters, counts)
+					self.countLetters(char, letterCounts)
+		return letterCounts
 		
 
-	def countLetters(self, char, letters, counts):
-		if char in letters:
-			i = letters.index(char)
-			counts[i] += 1
+	def countLetters(self, char, letterCounts):
+		if char in letterCounts:
+			letterCounts[char] += 1
 		else:
-			letters.append(char)
-			counts.append(1)
+			letterCounts[char] = 1
 
 
-	def getLetterColors(self, letters, counts, baseColor):
+	def getLetterColors(self, letterCounts, baseColor):
 
 		letterColors = {}
 
-		for char in letters:
-			i = letters.index(char)
-			count = counts[i]
+		for char in letterCounts:
+			count = letterCounts[char]
 
 			red = (baseColor[0] + (count * random.randrange(1, 5))) % 255
 			grn = (baseColor[1] + (count * random.randrange(1, 5))) % 255
@@ -177,8 +172,10 @@ class selfDrawingCode :
 
 
 	def resizeImage(self, imgSize):
-		imgSize[0] = int(self.minmax[2]) + self.dx + 2*(self.rMax + self.buff) 
-		imgSize[1] = int(self.minmax[3]) + self.dy + 2*(self.rMax + self.buff)	
+		# ToDo: get this working correctly
+		imgSize[0] = 10000 #int(self.minmax[2]) + self.dx + 2*(self.rMax + self.buff) 
+		imgSize[1] = 10000 #int(self.minmax[3]) + self.dy + 2*(self.rMax + self.buff)	
+		return imgSize
 
 
 	def drawDots(self, draw, dots):
