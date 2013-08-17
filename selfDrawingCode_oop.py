@@ -22,6 +22,7 @@ class selfDrawingCode :
 		self.dxMax = 0
 		self.dyMax = 0
 		
+
 		imgSize = [500, 500] # set default size of image, will be resized
 		border = 10
 		maxX = imgSize[0] - border
@@ -43,9 +44,11 @@ class selfDrawingCode :
 		# preprocess data
 		letterCounts = self.getLetters(data)
 
+		# get random base color, use as common seed for colors based on letter frequencies in the code
 		baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
 		letterColors = self.getLetterColors(letterCounts, baseColor)
 		
+		# get initial positions and colors for each char in code
 		dots = self.getDots(data, letterColors)
 		self.minmax = self.getDotsMinMax(dots)
 
@@ -65,6 +68,7 @@ class selfDrawingCode :
 		self.drawDots(draw, dots)
 		#drawChars(draw)  # if on linux, you may uncomment this
 
+		# paste drawing onto image background--attempting to blend alphas of dots
 		bkg.paste(im, (0,0), im)
 
 		# save image with source file name, but with png suffix
