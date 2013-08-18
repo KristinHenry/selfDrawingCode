@@ -14,20 +14,21 @@ class selfDrawingCode :
 
 		self.fontname = "Anonymous_Pro.ttf"   # change this to a font you have
 
-		self.rMax = 60
+		#self.rMax = 60
 		self.buff = 50
 		self.dx = 0
 		self.dy = 0
 		self.dxMax = 0
 		self.dyMax = 0
 		
-		imgSize = [500, 500] # set default size of image, will be resized
+		imgSize = [200, 200] # set default size of image, will be resized
 		border = 10
 		
 		# get code as text data
 		filename = "selfDrawingCode_oop.py" # ToDo: get the name of this file automatically
 		try :
 			data = open(filename).readlines()
+			#data = "testing teting brown fox jumped"
 		except :
 			data = ""
 			print "Error reading file: ", filename
@@ -40,21 +41,21 @@ class selfDrawingCode :
 		baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
 		letterColors = self.getLetterColors(letterCounts, baseColor)
 		
-		# get initial positions and colors for each char in code
-		# randomizing a little, so that each generated image is different
-		x_initial = (imgSize[0] - (2*border))/2 + random.randrange(-100, 100)
-		y_initial = (imgSize[1] - (2*border))/2 + random.randrange(-100, 100)
+		# set initial position, then set positions and colors for each char in code
 		angle_initial = 0
+		x_initial = (imgSize[0] - (2*border))/2 
+		y_initial = (imgSize[1] - (2*border))/2 
 		xya = [x_initial, y_initial, angle_initial]  # ToDo: better name for this variable
 		dots = self.getDots(data, letterColors, xya)
 
 		# get extreme positions of the resulting dots
-		self.minmax = self.getDotsMinMax(dots)
+		minmax = self.getDotsMinMax(dots)
 
 		# adjust positions of dots and image size, so that image contains all dots
-		self.shiftDots(dots)
-		imgSize = self.resizeImage(imgSize)
-		# print imgSize
+		rMax = 60
+		self.shiftDots(dots, minmax, rMax)
+		imgSize = self.resizeImage(minmax, rMax)
+		print "imgSize: ", imgSize
 
 		# create background  and image to draw into
 		backgroundColor = "white"
@@ -64,7 +65,7 @@ class selfDrawingCode :
 		draw = ImageDraw.Draw(im)
 
 		# Do the drawing
-		r = 50
+		r = 60
 		self.drawDots(draw, dots, r)
 		#drawChars(draw)  # if on linux, you may uncomment this
 
@@ -163,12 +164,14 @@ class selfDrawingCode :
 			yMin = p[1] if p[1] < yMin else yMin
 			yMax = p[1] if p[1] > yMax else yMax
 
+			
+		print "minmax: ", [xMin, yMin, xMax, yMax]
+
 		return [xMin, yMin, xMax, yMax]
 
 
-	def shiftDots(self, dots):
-		
-		minmax = self.minmax
+	def shiftDots(self, dots, minmax, rMax):
+		# shoudl rMax be r?
 		dx = self.dx
 		dy = self.dy
 
@@ -177,15 +180,19 @@ class selfDrawingCode :
 
 		for dot in dots:
 			p = dot[1]
-			p[0] += dx + self.rMax + self.buff
-			p[1] += dy + self.rMax + self.buff	
+			p[0] += dx + rMax + self.buff
+			p[1] += dy + rMax + self.buff	
 
 
-	def resizeImage(self, imgSize):
+	def resizeImage(self, minmax, rMax):
 		# ToDo: get this working correctly
-		imgSize[0] = 10000 #int(self.minmax[2]) + self.dx + 2*(self.rMax + self.buff) 
-		imgSize[1] = 10000 #int(self.minmax[3]) + self.dy + 2*(self.rMax + self.buff)	
-		return imgSize
+
+		width = (minmax[2] - minmax[0]) + 2*rMax
+		height = (minmax[3] - minmax[1]) + 2*rMax
+
+		#width = int(minmax[2]) + rMax # + self.dx + 2*(self.rMax + self.buff) 
+		#height = int(minmax[3]) + rMax # + self.dy + 2*(self.rMax + self.buff)	
+		return [width, height]
 
 
 	def drawDots(self, draw, dots, r):
