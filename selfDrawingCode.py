@@ -2,223 +2,218 @@
 #
 #  other monospaced fonts can be found here http://www.fontsquirrel.com/fonts/list/classification/monospaced
 
+import random, math
+
 import PIL
-from PIL import Image
-import ImageFont, ImageDraw
-import random
-import math
+from PIL import Image, ImageFont, ImageDraw
 
 
-filename = "selfDrawingCode.py"
-fontname = "Anonymous_Pro.ttf"   # change this to a font you have
+class selfDrawingCode :
 
-imgSizeX = imgSizeY = 500	# set default size of image
-backgroundColor = "white"
-backgroundColorAlpha = "white"
+	def __init__(self, fontname=None) :
 
-maxX = imgSizeX -10
-minX = 10
-maxY = imgSizeY -10
-minY = 10
+		self.fontname = "Anonymous_Pro.ttf"   # change this to a font you have
 
-rMax = 60
-dxMax = 0
-dyMax = 0
-buff = 50
-dx = 0
-dy = 0
-
-letters = []
-counts = []
-letterColors = {}
-
-baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
-
-xy = [(maxX - minX)/2 + random.randrange(-100, 100), (maxY - minY)/2 + random.randrange(-100, 100)]
-angle = 0
-
-
-def getLetters():
-	for line in data:
-		for char in line:
-			if (char != '\n') & (char != '\t'):
-				countLetters(char)
-
-
-def countLetters(char):
-	global letters
-	global counts
-	if char in letters:
-		i = letters.index(char)
-		counts[i] += 1
-	else:
-		letters.append(char)
-		counts.append(1)
-
-
-def getLetterColors():
-	global letters
-	global counts
-	global letterColors
-	global baseColor
-
-	for char in letters:
-		i = letters.index(char)
-		count = counts[i]
-
-		red = (baseColor[0] + (count * random.randrange(1, 5))) % 255
-		grn = (baseColor[1] + (count * random.randrange(1, 5))) % 255
-		blu = (baseColor[2] + (count * random.randrange(1, 5))) % 255
-
-		color = [red, grn, blu, baseColor[3]]
-		letterColors[char] = color
-	
-
-def getXYfromChar(char):
-	global xy
-	global angle
-
-	r = random.randrange(10, 20) 
-
-	if char == ' ':
-		# change direction of growth for next dots
-		angle += random.randrange(10, 20)
-
-	xy[0] += int(math.floor(r * math.cos(angle)))
-	xy[1] += int(math.floor(r * math.sin(angle)))
-
-	return [xy[0],xy[1]]
-
-
-def getDots():
-	global letterColors
-	dots = []
-	# pre-process code from text file
-	for line in data:
-		for char in line:
-			if char == '\n':
-				char = ' '
-			if (char != '\n') & (char != '\t'):
-
-				xy = getXYfromChar(char)
-				
-				getLetterColors()
-				c = letterColors[char]
-				dot = [char, xy, c]
-				dots.append(dot)
-						
-	return dots
-
-
-def getDotsMinMax():
-	global dots
-
-	xMin = xMax = 500
-	yMin = yMax = 500
-
-	i = 0
-	for dot in dots:
-		p = dot[1]
+		#self.rMax = 60
+		self.buff = 50
+		self.dx = 0
+		self.dy = 0
+		self.dxMax = 0
+		self.dyMax = 0
 		
-		xMin = p[0] if p[0] < xMin else xMin
-		xMax = p[0] if p[0] > xMax else xMax
+		imgSize = [200, 200] # set default size of image, will be resized
+		border = 10
+		
+		# get code as text data
+		filename = "selfDrawingCode_oop.py" # ToDo: get the name of this file automatically
+		try :
+			data = open(filename).readlines()
+			#data = "testing teting brown fox jumped"
+		except :
+			data = ""
+			print "Error reading file: ", filename
 
-		yMin = p[1] if p[1] < yMin else yMin
-		yMax = p[1] if p[1] > yMax else yMax
+		# preprocess data
+		letterCounts = self.getLetters(data)
+		# idea: do visualization of interesing chars like {} for dictionaries, etc
 
-	return [xMin, yMin, xMax, yMax]
+		# get random base color, use as common seed for colors based on letter frequencies in the code
+		baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
+		letterColors = self.getLetterColors(letterCounts, baseColor)
+		
+		# set initial position, then set positions and colors for each char in code
+		angle_initial = 0
+		x_initial = (imgSize[0] - (2*border))/2 
+		y_initial = (imgSize[1] - (2*border))/2 
+		xya = [x_initial, y_initial, angle_initial]  # ToDo: better name for this variable
+		dots = self.getDots(data, letterColors, xya)
 
+		# get extreme positions of the resulting dots
+		minmax = self.getDotsMinMax(dots)
 
-def shiftDots():
-	global dots
-	global minmax
-	global dx
-	global dy
+		# adjust positions of dots and image size, so that image contains all dots
+		rMax = 60
+		self.shiftDots(dots, minmax, rMax)
+		imgSize = self.resizeImage(minmax, rMax)
+		print "imgSize: ", imgSize
 
-	dx = -int(minmax[0]) if minmax[0] > 0 else int(math.fabs(minmax[0]))
-	dy = -int(minmax[1]) if minmax[1] > 0 else int(math.fabs(minmax[1]))
+		# create background  and image to draw into
+		backgroundColor = "white"
+		backgroundColorAlpha = "white"
+		bkg = Image.new("RGB", (imgSize[0], imgSize[1]), backgroundColor)
+		im = Image.new("RGBA", (imgSize[0], imgSize[1]), backgroundColorAlpha)
+		draw = ImageDraw.Draw(im)
 
-	for dot in dots:
-		p = dot[1]
-		p[0] += dx + rMax + buff
-		p[1] += dy + rMax + buff
+		# Do the drawing
+		r = 60
+		self.drawDots(draw, dots, r)
+		#drawChars(draw)  # if on linux, you may uncomment this
 
+		# paste drawing onto image background--attempting to blend alphas of dots
+		bkg.paste(im, (0,0), im)
 
-def resizeImage():
-	global minmax
-	global imgSizeX
-	global imgSizeY
-	global dx
-	global dy
-
-	imgSizeX = int(minmax[2]) + dx + 2*(rMax + buff) 
-	imgSizeY = int(minmax[3]) + dy + 2*(rMax + buff)		
-
-
-def drawDots(draw):
-	for dot in dots:
-		x = dot[1][0] 
-		y = dot[1][1] 
-		c = dot[2]
-		char = dot[0]
-		r = rMax 
-		c[3] = 60
-		dx = 0 
-		dy = 0 
-		draw.ellipse((x-r + dx, y-r + dy, x+r + dx, y+r + dy), fill=tuple(c))
-		list(c)
-
-
-def drawChars(draw):
-	for dot in dots:
-		dx = random.randrange(-100, 100)
-		dy = random.randrange(-100, 100)
-		x = dot[1][0] 
-		y = dot[1][1] 
-		xy = (x + dx,y + dy)
-		c = dot[2]
-		char = dot[0]
-		c[3] = 255
-		fontsize = 42 
-		font = ImageFont.truetype(fontname, fontsize)
-		draw.text(xy, char, font=font, fill=tuple(c))
-		list(c)
+		# save image with source file name, but with png suffix
+		bkg.save(filename[:-2] + "png")
 
 
-#----------------------
-# get code as text data
-with open(filename) as f:
-    data = f.readlines()
+	def getLetters(self, data):
+
+		letterCounts = {}
+		for line in data:
+			for char in line:
+				if (char != '\n') & (char != '\t'):
+					self.countLetters(char, letterCounts)
+		return letterCounts
+		
+
+	def countLetters(self, char, letterCounts):
+
+		if char in letterCounts:
+			letterCounts[char] += 1
+		else:
+			letterCounts[char] = 1
 
 
-# clean up the txt file
-for line in data:
-	line.replace("\n", " ")
+	def getLetterColors(self, letterCounts, baseColor):
+
+		letterColors = {}
+
+		for char in letterCounts:
+			count = letterCounts[char]
+
+			red = (baseColor[0] + (count * random.randrange(1, 5))) % 255
+			grn = (baseColor[1] + (count * random.randrange(1, 5))) % 255
+			blu = (baseColor[2] + (count * random.randrange(1, 5))) % 255
+
+			color = [red, grn, blu, baseColor[3]]
+			letterColors[char] = color
+
+		return letterColors
+		
+
+	def getXYfromChar(self, char, xya):
+
+		angle = xya[2]
+
+		r = random.randrange(10, 20) 
+
+		if char == ' ':
+			# change direction of growth for next dots
+			xya[2] += random.randrange(10, 20)
+			if xya[2] >= 360:
+				xya[2] = 0
+
+		xya[0] += int(math.floor(r * math.cos(angle)))
+		xya[1] += int(math.floor(r * math.sin(angle)))
+
+		return xya
 
 
-# preprocess data
-getLetters()
-dots = getDots()
-minmax = getDotsMinMax()
+	def getDots(self, data, letterColors, xya):
+		pos = xya
+	 	dots = []
+		# determin position and color of each character in code from text file
+		for line in data:
+			for char in line:
+				if char == '\n':
+					char = ' '
+				if (char != '\n') & (char != '\t'):
+					xya = self.getXYfromChar(char, xya)
+					pos = [xya[0], xya[1], xya[2]]
+					c = letterColors[char]
+					dot = [char, pos, c]
+					dots.append(dot)
 
-# adjust positions and image size
-shiftDots()
-resizeImage()
+					
+							
+		return dots
 
 
-# create background 
-bkg = Image.new("RGB", (imgSizeX, imgSizeY), backgroundColor)
+	def getDotsMinMax(self, dots):
+		
+		xMin = xMax = 500
+		yMin = yMax = 500
 
-# create new image to draw into
-im = Image.new("RGBA", (imgSizeX, imgSizeY), backgroundColorAlpha)
+		i = 0
+		for dot in dots:
+			p = dot[1]
+			
+			xMin = p[0] if p[0] < xMin else xMin
+			xMax = p[0] if p[0] > xMax else xMax
 
-# Do the drawing
-draw = ImageDraw.Draw(im)
-drawDots(draw)
-#drawChars(draw)  # if on linux, can uncomment this
+			yMin = p[1] if p[1] < yMin else yMin
+			yMax = p[1] if p[1] > yMax else yMax
 
-bkg.paste(im, (0,0), im)
+			
+		print "minmax: ", [xMin, yMin, xMax, yMax]
 
-# save image with source file name, but with png suffix
-bkg.save(filename[:-2] + "png")
+		return [xMin, yMin, xMax, yMax]
+
+
+	def shiftDots(self, dots, minmax, rMax):
+		# shoudl rMax be r?
+		dx = self.dx
+		dy = self.dy
+
+		dx = -int(minmax[0]) if minmax[0] > 0 else int(math.fabs(minmax[0]))
+		dy = -int(minmax[1]) if minmax[1] > 0 else int(math.fabs(minmax[1]))
+
+		for dot in dots:
+			p = dot[1]
+			p[0] += dx + rMax + self.buff
+			p[1] += dy + rMax + self.buff	
+
+
+	def resizeImage(self, minmax, rMax):
+		# ToDo: get this working correctly
+
+		width = (minmax[2] - minmax[0]) + 2*rMax
+		height = (minmax[3] - minmax[1]) + 2*rMax
+
+		#width = int(minmax[2]) + rMax # + self.dx + 2*(self.rMax + self.buff) 
+		#height = int(minmax[3]) + rMax # + self.dy + 2*(self.rMax + self.buff)	
+		return [width, height]
+
+
+	def drawDots(self, draw, dots, r):
+		for dot in dots:
+			x1 = dot[1][0] - r
+			y1 = dot[1][1] - r
+			x2 = x1 + r
+			y2 = y1 + r
+			c = dot[2]
+			char = dot[0]
+
+			c[3] = 60
+			dx = 0 
+			dy = 0 
+
+			#draw.ellipse((x-r + dx, y-r + dy, x+r + dx, y+r + dy), fill=tuple(c))
+			draw.ellipse((x1, y1, x2, y2), fill=tuple(c))
+			list(c)
+
+
+
+
+artist = selfDrawingCode()
 
