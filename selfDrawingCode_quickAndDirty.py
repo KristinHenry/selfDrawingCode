@@ -92,6 +92,7 @@ def getXYfromChar(char):
 
 def getDots():
 	global letterColors
+	getLetterColors()
 	dots = []
 	# pre-process code from text file
 	for line in data:
@@ -101,8 +102,6 @@ def getDots():
 			if (char != '\n') & (char != '\t'):
 
 				xy = getXYfromChar(char)
-				
-				getLetterColors()
 				c = letterColors[char]
 				dot = [char, xy, c]
 				dots.append(dot)
