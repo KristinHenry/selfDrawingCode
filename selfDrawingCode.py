@@ -14,7 +14,6 @@ class selfDrawingCode :
 
 		self.fontname = "Anonymous_Pro.ttf"   # change this to a font you have
 
-		#self.rMax = 60
 		self.buff = 50
 		self.dx = 0
 		self.dy = 0
@@ -25,17 +24,15 @@ class selfDrawingCode :
 		border = 10
 		
 		# get code as text data
-		filename = "selfDrawingCode_oop.py" # ToDo: get the name of this file automatically
+		filename = "selfDrawingCode.py" # ToDo: get the name of this file automatically
 		try :
 			data = open(filename).readlines()
-			#data = "testing teting brown fox jumped"
 		except :
 			data = ""
 			print "Error reading file: ", filename
 
 		# preprocess data
 		letterCounts = self.getLetters(data)
-		# idea: do visualization of interesing chars like {} for dictionaries, etc
 
 		# get random base color, use as common seed for colors based on letter frequencies in the code
 		baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
@@ -55,7 +52,6 @@ class selfDrawingCode :
 		rMax = 60
 		self.shiftDots(dots, minmax, rMax)
 		imgSize = self.resizeImage(minmax, rMax)
-		print "imgSize: ", imgSize
 
 		# create background  and image to draw into
 		backgroundColor = "white"
@@ -143,14 +139,11 @@ class selfDrawingCode :
 					c = letterColors[char]
 					dot = [char, pos, c]
 					dots.append(dot)
-
 					
-							
 		return dots
 
 
 	def getDotsMinMax(self, dots):
-		
 		xMin = xMax = 500
 		yMin = yMax = 500
 
@@ -163,9 +156,6 @@ class selfDrawingCode :
 
 			yMin = p[1] if p[1] < yMin else yMin
 			yMax = p[1] if p[1] > yMax else yMax
-
-			
-		print "minmax: ", [xMin, yMin, xMax, yMax]
 
 		return [xMin, yMin, xMax, yMax]
 
@@ -185,13 +175,9 @@ class selfDrawingCode :
 
 
 	def resizeImage(self, minmax, rMax):
-		# ToDo: get this working correctly
-
 		width = (minmax[2] - minmax[0]) + 2*rMax
 		height = (minmax[3] - minmax[1]) + 2*rMax
 
-		#width = int(minmax[2]) + rMax # + self.dx + 2*(self.rMax + self.buff) 
-		#height = int(minmax[3]) + rMax # + self.dy + 2*(self.rMax + self.buff)	
 		return [width, height]
 
 
@@ -208,7 +194,6 @@ class selfDrawingCode :
 			dx = 0 
 			dy = 0 
 
-			#draw.ellipse((x-r + dx, y-r + dy, x+r + dx, y+r + dy), fill=tuple(c))
 			draw.ellipse((x1, y1, x2, y2), fill=tuple(c))
 			list(c)
 
