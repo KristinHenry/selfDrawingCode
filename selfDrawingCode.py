@@ -71,7 +71,6 @@ class selfDrawingCode :
 		# save image with source file name, but with png suffix
 		bkg.save(filename[:-2] + "png")
 
-
 	def getLetters(self, data):
 
 		letterCounts = {}
@@ -80,7 +79,6 @@ class selfDrawingCode :
 				if (char != '\n') & (char != '\t'):
 					self.countLetters(char, letterCounts)
 		return letterCounts
-		
 
 	def countLetters(self, char, letterCounts):
 
@@ -88,7 +86,6 @@ class selfDrawingCode :
 			letterCounts[char] += 1
 		else:
 			letterCounts[char] = 1
-
 
 	def getLetterColors(self, letterCounts, baseColor):
 
@@ -106,7 +103,6 @@ class selfDrawingCode :
 
 		return letterColors
 		
-
 	def getXYfromChar(self, char, xya):
 
 		angle = xya[2]
@@ -123,7 +119,6 @@ class selfDrawingCode :
 		xya[1] += int(math.floor(r * math.sin(angle)))
 
 		return xya
-
 
 	def getDots(self, data, letterColors, xya):
 		pos = xya
@@ -142,7 +137,6 @@ class selfDrawingCode :
 					
 		return dots
 
-
 	def getDotsMinMax(self, dots):
 		xMin = xMax = 500
 		yMin = yMax = 500
@@ -159,7 +153,6 @@ class selfDrawingCode :
 
 		return [xMin, yMin, xMax, yMax]
 
-
 	def shiftDots(self, dots, minmax, rMax):
 		# shoudl rMax be r?
 		dx = self.dx
@@ -173,13 +166,11 @@ class selfDrawingCode :
 			p[0] += dx + rMax + self.buff
 			p[1] += dy + rMax + self.buff	
 
-
 	def resizeImage(self, minmax, rMax):
 		width = (minmax[2] - minmax[0]) + 2*rMax
 		height = (minmax[3] - minmax[1]) + 2*rMax
 
 		return [width, height]
-
 
 	def drawDots(self, draw, dots, r):
 		for dot in dots:
@@ -196,8 +187,6 @@ class selfDrawingCode :
 
 			draw.ellipse((x1, y1, x2, y2), fill=tuple(c))
 			list(c)
-
-
 
 
 artist = selfDrawingCode()
