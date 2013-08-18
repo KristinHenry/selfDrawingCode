@@ -5,8 +5,7 @@
 import random, math
 
 import PIL
-from PIL import Image
-import ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw
 
 
 class selfDrawingCode :
@@ -22,16 +21,8 @@ class selfDrawingCode :
 		self.dxMax = 0
 		self.dyMax = 0
 		
-
 		imgSize = [500, 500] # set default size of image, will be resized
 		border = 10
-		maxX = imgSize[0] - border
-		maxY = imgSize[1] - border
-		minX = border
-		minY = border
-		self.xy = [(maxX - minX)/2 + random.randrange(-100, 100), (maxY - minY)/2 + random.randrange(-100, 100)]
-		self.angle = 0
-
 		
 		# get code as text data
 		filename = "selfDrawingCode_oop.py" # ToDo: get the name of this file automatically
@@ -43,19 +34,27 @@ class selfDrawingCode :
 
 		# preprocess data
 		letterCounts = self.getLetters(data)
+		# idea: do visualization of interesing chars like {} for dictionaries, etc
 
 		# get random base color, use as common seed for colors based on letter frequencies in the code
 		baseColor = [random.randrange(0,255), random.randrange(0,255), random.randrange(0,255), 100]
 		letterColors = self.getLetterColors(letterCounts, baseColor)
 		
 		# get initial positions and colors for each char in code
-		dots = self.getDots(data, letterColors)
+		# randomizing a little, so that each generated image is different
+		x_initial = (imgSize[0] - (2*border))/2 + random.randrange(-100, 100)
+		y_initial = (imgSize[1] - (2*border))/2 + random.randrange(-100, 100)
+		angle_initial = 0
+		xya = [x_initial, y_initial, angle_initial]  # ToDo: better name for this variable
+		dots = self.getDots(data, letterColors, xya)
+
+		# get extreme positions of the resulting dots
 		self.minmax = self.getDotsMinMax(dots)
 
 		# adjust positions of dots and image size, so that image contains all dots
 		self.shiftDots(dots)
 		imgSize = self.resizeImage(imgSize)
-		print imgSize
+		# print imgSize
 
 		# create background  and image to draw into
 		backgroundColor = "white"
@@ -63,9 +62,10 @@ class selfDrawingCode :
 		bkg = Image.new("RGB", (imgSize[0], imgSize[1]), backgroundColor)
 		im = Image.new("RGBA", (imgSize[0], imgSize[1]), backgroundColorAlpha)
 		draw = ImageDraw.Draw(im)
-		
+
 		# Do the drawing
-		self.drawDots(draw, dots)
+		r = 50
+		self.drawDots(draw, dots, r)
 		#drawChars(draw)  # if on linux, you may uncomment this
 
 		# paste drawing onto image background--attempting to blend alphas of dots
@@ -75,8 +75,8 @@ class selfDrawingCode :
 		bkg.save(filename[:-2] + "png")
 
 
-
 	def getLetters(self, data):
+
 		letterCounts = {}
 		for line in data:
 			for char in line:
@@ -86,6 +86,7 @@ class selfDrawingCode :
 		
 
 	def countLetters(self, char, letterCounts):
+
 		if char in letterCounts:
 			letterCounts[char] += 1
 		else:
@@ -109,24 +110,26 @@ class selfDrawingCode :
 		return letterColors
 		
 
-	def getXYfromChar(self, char):
-		xy = self.xy
-		angle = self.angle
+	def getXYfromChar(self, char, xya):
+
+		angle = xya[2]
 
 		r = random.randrange(10, 20) 
 
 		if char == ' ':
 			# change direction of growth for next dots
-			angle += random.randrange(10, 20)
+			xya[2] += random.randrange(10, 20)
+			if xya[2] >= 360:
+				xya[2] = 0
 
-		xy[0] += int(math.floor(r * math.cos(angle)))
-		xy[1] += int(math.floor(r * math.sin(angle)))
+		xya[0] += int(math.floor(r * math.cos(angle)))
+		xya[1] += int(math.floor(r * math.sin(angle)))
 
-		return [xy[0],xy[1]]
+		return xya
 
 
-	def getDots(self, data, letterColors):
-		
+	def getDots(self, data, letterColors, xya):
+		pos = xya
 	 	dots = []
 		# determin position and color of each character in code from text file
 		for line in data:
@@ -134,10 +137,13 @@ class selfDrawingCode :
 				if char == '\n':
 					char = ' '
 				if (char != '\n') & (char != '\t'):
-					xy = self.getXYfromChar(char)
+					xya = self.getXYfromChar(char, xya)
+					pos = [xya[0], xya[1], xya[2]]
 					c = letterColors[char]
-					dot = [char, xy, c]
+					dot = [char, pos, c]
 					dots.append(dot)
+
+					
 							
 		return dots
 
@@ -182,17 +188,21 @@ class selfDrawingCode :
 		return imgSize
 
 
-	def drawDots(self, draw, dots):
+	def drawDots(self, draw, dots, r):
 		for dot in dots:
-			x = dot[1][0] 
-			y = dot[1][1] 
+			x1 = dot[1][0] - r
+			y1 = dot[1][1] - r
+			x2 = x1 + r
+			y2 = y1 + r
 			c = dot[2]
 			char = dot[0]
-			r = self.rMax 
+
 			c[3] = 60
 			dx = 0 
 			dy = 0 
-			draw.ellipse((x-r + dx, y-r + dy, x+r + dx, y+r + dy), fill=tuple(c))
+
+			#draw.ellipse((x-r + dx, y-r + dy, x+r + dx, y+r + dy), fill=tuple(c))
+			draw.ellipse((x1, y1, x2, y2), fill=tuple(c))
 			list(c)
 
 
