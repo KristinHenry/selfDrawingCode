@@ -9,6 +9,6 @@ Also Requires Python Image Library (PIL)
 
 Blog post on project: http://www.underground-flash.com/2013/07/self-drawing-code_24.html
 
-Note:  You will need the .ttf file in same folder as the .py file.
+Note:  You will need the font's .ttf file in same folder as the .py file.
 
 
