@@ -11,4 +11,6 @@ Blog post on project: http://www.underground-flash.com/2013/07/self-drawing-code
 
 Note:  You will need the font's .ttf file in same folder as the .py file.
 
+Project page: http://kristinhenry.github.io/selfDrawingCode/
+
 
