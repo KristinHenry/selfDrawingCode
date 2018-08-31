@@ -14,3 +14,5 @@ Note:  You will need the font's .ttf file in same folder as the .py file.
 Project page: http://kristinhenry.github.io/selfDrawingCode/
 
 
+
+[![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/S6S36A7G)
